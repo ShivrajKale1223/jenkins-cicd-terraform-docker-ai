@@ -1,0 +1,7 @@
+*.tfvars
+.terraform/
+*.tfstate*
+*.pem
+.env
+test.log
+build.log
