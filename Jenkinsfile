@@ -53,17 +53,15 @@ pipeline {
     }
   }
 
-    post {
+  post {
     success { echo "Deployed build ${env.BUILD_NUMBER}" }
     failure {
-      script {
-        sh '''
-          curl -s "${BUILD_URL}consoleText" | tail -150 > build.log || true
-          pip3 install -q --user requests || true
-          python3 ai/analyze_failure.py build.log || true
-        '''
-      }
+      sh '''
+        tail -150 /var/lib/jenkins/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/log > build.log
+        echo "===== AI ANALYSIS ====="
+        python3 ai/analyze_failure.py build.log || echo "AI analysis failed"
+      '''
     }
-    always { deleteDir() }
+    cleanup { deleteDir() }
   }
 }
