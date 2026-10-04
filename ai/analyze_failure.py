@@ -20,16 +20,14 @@ LOG:
 {log_tail}"""
 
 payload = json.dumps({
-    "model": "grok-4.3",
-    "messages": [{"role": "user", "content": prompt}],
-    "temperature": 0.2,
+    "contents": [{"parts": [{"text": prompt}]}]
 }).encode()
 
 req = urllib.request.Request(
-    "https://api.x.ai/v1/chat/completions",
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
     data=payload,
     headers={
-        "Authorization": f"Bearer {API_KEY}",
+        "x-goog-api-key": API_KEY,
         "Content-Type": "application/json",
         "User-Agent": "jenkins-failure-analyzer/1.0",
     },
@@ -37,7 +35,7 @@ req = urllib.request.Request(
 try:
     with urllib.request.urlopen(req, timeout=30) as resp:
         data = json.load(resp)
-    print(data["choices"][0]["message"]["content"])
+    print(data["candidates"][0]["content"]["parts"][0]["text"])
 except urllib.error.HTTPError as e:
     print(f"API error {e.code}: {e.read().decode(errors='ignore')[:300]}")
     sys.exit(1)
