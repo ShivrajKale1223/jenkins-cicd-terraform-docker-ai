@@ -53,18 +53,17 @@ pipeline {
     }
   }
 
-  post {
+    post {
     success { echo "Deployed build ${env.BUILD_NUMBER}" }
     failure {
       script {
-        // Pull the last 150 lines of this build's console log
-        def logText = currentBuild.rawBuild.getLog(150).join('\n')
-        writeFile file: 'build.log', text: logText
-        sh 'pip3 install -q --user requests || true'
-        def analysis = sh(script: 'python3 ai/analyze_failure.py build.log', returnStdout: true).trim()
-        echo "===== AI ANALYSIS =====\n${analysis}"
+        sh '''
+          curl -s "${BUILD_URL}consoleText" | tail -150 > build.log || true
+          pip3 install -q --user requests || true
+          python3 ai/analyze_failure.py build.log || true
+        '''
       }
     }
-    always { cleanWs() }
+    always { deleteDir() }
   }
 }
