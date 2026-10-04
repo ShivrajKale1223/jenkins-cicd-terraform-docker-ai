@@ -20,13 +20,13 @@ LOG:
 {log_tail}"""
 
 payload = json.dumps({
-    "model": "llama-3.3-70b-versatile",
+    "model": "grok-4.3",
     "messages": [{"role": "user", "content": prompt}],
     "temperature": 0.2,
 }).encode()
 
 req = urllib.request.Request(
-    "https://api.groq.com/openai/v1/chat/completions",
+    "https://api.x.ai/v1/chat/completions",
     data=payload,
     headers={
         "Authorization": f"Bearer {API_KEY}",
