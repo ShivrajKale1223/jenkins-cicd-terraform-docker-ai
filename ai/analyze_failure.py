@@ -30,35 +30,39 @@ def rule_based_hint(text):
     return "Rule-based hint: no known pattern matched. Read the first ERROR line in the log."
 
 
+MODELS = ["llama-3.1-8b-instant", "openai/gpt-oss-20b", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"]
+
+
 def ask_groq(prompt):
-    payload = json.dumps({
-        "model": "llama-3.3-70b-versatile",  # check Groq docs if this name is rejected
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
-    }).encode()
     last = ""
-    for attempt in range(3):
-        req = urllib.request.Request(
-            "https://api.groq.com/openai/v1/chat/completions",
-            data=payload,
-            headers={
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json",
-                "User-Agent": "jenkins-failure-analyzer/1.0",
-            },
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                return json.load(resp)["choices"][0]["message"]["content"], ""
-        except urllib.error.HTTPError as e:
-            last = f"HTTP {e.code}: {e.read().decode(errors='ignore')[:200]}"
-            if e.code in (429, 500, 503):
-                time.sleep(5 * (attempt + 1))
-                continue
-            break
-        except (urllib.error.URLError, socket.timeout, TimeoutError) as e:
-            last = f"network/timeout: {e}"
-            time.sleep(5)
+    for model in MODELS:
+        payload = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2,
+        }).encode()
+        for attempt in range(3):
+            req = urllib.request.Request(
+                "https://api.groq.com/openai/v1/chat/completions",
+                data=payload,
+                headers={
+                    "Authorization": f"Bearer {API_KEY}",
+                    "Content-Type": "application/json",
+                    "User-Agent": "jenkins-failure-analyzer/1.0",
+                },
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    return json.load(resp)["choices"][0]["message"]["content"], ""
+            except urllib.error.HTTPError as e:
+                last = f"{model} -> HTTP {e.code}: {e.read().decode(errors='ignore')[:150]}"
+                if e.code in (429, 500, 503):
+                    time.sleep(5 * (attempt + 1))
+                    continue
+                break  # 404/400/401: try the next model
+            except (urllib.error.URLError, socket.timeout, TimeoutError) as e:
+                last = f"{model} -> network/timeout: {e}"
+                time.sleep(5)
     return None, last
 
 
