@@ -7,7 +7,6 @@ pipeline {
     ECR_REPO     = "${ECR_REGISTRY}/myapp"
     IMAGE_TAG    = "${env.BUILD_NUMBER}"
     AI_API_KEY   = credentials('AI_API_KEY')
-    ALERT_EMAIL  = credentials('ALERT_EMAIL')   // Jenkins "Secret text" credential, keeps your address out of GitHub
   }
 
   options {
