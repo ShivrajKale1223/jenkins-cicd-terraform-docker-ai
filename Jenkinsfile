@@ -62,7 +62,7 @@ pipeline {
         tail -150 /var/lib/jenkins/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/log > build.log || true
         echo "===== AI ANALYSIS ====="
         python3 ai/analyze_failure.py build.log 2>&1 | tee ai_analysis.txt || true
-        grep -iE "error|denied|not found|failed" build.log | tail -15 > error_summary.txt || true
+        grep -iE "error|denied|not found|failed" build.log | cut -c1-200 | tail -8 > error_summary.txt || true
         [ -s ai_analysis.txt ] || echo "AI analysis not available." > ai_analysis.txt
         [ -s error_summary.txt ] || echo "No error lines found in the log tail." > error_summary.txt
       '''
