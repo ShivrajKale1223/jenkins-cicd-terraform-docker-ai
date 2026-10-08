@@ -67,14 +67,13 @@ pipeline {
         [ -s error_summary.txt ] || echo "No error lines found in the log tail." > error_summary.txt
       '''
 
-      // 2) Email it
+      // 2) Email it (plain mail step: uses the E-mail Notification settings that passed your test)
       script {
         def aiText  = readFile('ai_analysis.txt')
         def errText = readFile('error_summary.txt')
-        emailext(
+        mail(
           to: env.ALERT_EMAIL,
           subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-          mimeType: 'text/plain',
           body: """Build FAILED
 
 Job:    ${env.JOB_NAME}
